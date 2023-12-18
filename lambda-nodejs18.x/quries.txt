@@ -1,0 +1,12 @@
+CREATE TABLE invoices (
+    invoice_id SERIAL PRIMARY KEY,
+    payer_address VARCHAR(42) NOT NULL,
+    payee_address VARCHAR(42) NOT NULL,
+    amount NUMERIC NOT NULL,
+    fee NUMERIC NOT NULL,
+    creation_date TIMESTAMP NOT NULL,
+    due_date TIMESTAMP NOT NULL,
+    status VARCHAR(10) NOT NULL,
+    approvals INTEGER NOT NULL
+);
+

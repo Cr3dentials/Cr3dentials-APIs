@@ -1,0 +1,81 @@
+Username : postgres
+Pass:cr3dentials
+Database name: invoice_factory
+Port:5432
+Endpoint: http://database-1.ctppflvfb7pt.us-east-1.rds.amazonaws.com/
+
+
+uuid: 3f52da4d-ac83-45c7-ba1e-6a9d270e1548
+
+{
+    "apiKey": "000b0dc7a6984a84a10eacf001427a48"
+}
+
+const axios = require('axios');
+
+exports.handler = async (event) => {
+    // Replace these variables with your actual credentials and details
+    const client_id = 'your_client_id';
+    const client_secret = 'your_client_secret';
+    const api_user_id = 'your_api_user_id';
+    const callback_url = 'your_callback_url';
+
+    // API endpoints
+    const token_endpoint = 'https://sandbox.momodeveloper.mtn.com/token/';
+    const invoice_endpoint = 'https://sandbox.momodeveloper.mtn.com/collection/v1_0/requesttopay';
+
+    // Request body for generating token
+    const token_request_data = {
+        grant_type: 'client_credentials'
+    };
+
+    // Request headers
+    const headers = {
+        Authorization: `Basic ${Buffer.from(`${client_id}:${client_secret}`).toString('base64')}`,
+        'Content-Type': 'application/json',
+        'Ocp-Apim-Subscription-Key': 'your_subscription_key'
+    };
+
+    try {
+        // Requesting access token
+        const tokenResponse = await axios.post(token_endpoint, token_request_data, { headers });
+        const access_token = tokenResponse.data.access_token;
+
+        // Request body for creating an invoice
+        const invoice_data = {
+            amount: '100', // Replace with the actual amount
+            currency: 'EUR', // Replace with the desired currency
+            externalId: 'your_unique_invoice_id', // Replace with your unique invoice ID
+            payer: {
+                partyIdType: 'MSISDN',
+                partyId: 'payer_phone_number' // Replace with the phone number of the payer
+            },
+            payerMessage: 'Payment for goods/services', // Replace with your message
+            payeeNote: 'Thank you for your purchase' // Replace with your note
+        };
+
+        // Make sure to include the access token in the request headers
+        headers.Authorization = `Bearer ${access_token}`;
+
+        // Sending the request to create an invoice
+        const invoiceResponse = await axios.post(invoice_endpoint, invoice_data, { headers });
+
+        // Checking the response
+        if (invoiceResponse.status === 201) {
+            return {
+                statusCode: 200,
+                body: JSON.stringify(`Invoice created successfully! Invoice details: ${JSON.stringify(invoiceResponse.data)}`)
+            };
+        } else {
+            return {
+                statusCode: invoiceResponse.status,
+                body: JSON.stringify(`Failed to create invoice. Error message: ${JSON.stringify(invoiceResponse.data)}`)
+            };
+        }
+    } catch (error) {
+        return {
+            statusCode: 500,
+            body: JSON.stringify(`Error: ${error.message}`)
+        };
+    }
+};
